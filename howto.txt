@@ -1,0 +1,106 @@
+Start debugging STM32F407 Discovery board with ST-LINK and GDB (on Ubuntu 22.04.3 LTS)
+
+0. preconditions:
+    $ sudo apt-get install libusb-1.0-0-dev
+    - create a workspace folder and navigate to it
+
+1. install stlink utility:
+    $ git clone https://github.com/stlink-org/stlink
+    $ cd stlink
+    $ cmake .
+    $ make
+    
+    - copy everything into place:
+    $ cd bin
+    $ sudo cp st-* /usr/local/bin
+    $ cd ../lib
+    $ sudo cp *.so* /lib32
+    $ sudo cp ../config/udev/rules.d/49-stlinkv* /etc/udev/rules.d/
+
+2. probe the stlink programmer:
+    - connect nucleo board to usb
+    $ lsusb 
+        - it should find the board, e.g.: Bus 001 Device 005: ID 0483:374b STMicroelectronics ST-LINK/V2.1
+    $ sudo st-info --probe
+        - it should find the stlink programmer: Found 1 stlink programmers
+        
+3. try reading from it:
+    $ sudo st-flash read dummy.bin 0 0xFFFF
+        - in case of error:
+            st-flash 1.7.0-314-g40fbdb4
+            /usr/local/share/stlink/chips: No such file or directory
+            2023-10-04T23:02:11 WARN common.c: unknown chip id! 0x413
+            Failed to connect to target
+            Failed to parse flash type or unrecognized flash type
+            
+            - copy *.chip files from [workspace]/stlink/config/chips/ to the missing directory from the error message (create missing folders first):
+            $ sudo cp [workspace]/stlink/config/chips/* /usr/local/share/stlink/chips/
+            
+        - now it should say:
+            st-flash 1.7.0-314-g40fbdb4
+            2023-10-04T23:17:13 INFO common.c: STM32F4x5_F4x7: 192 KiB SRAM, 1024 KiB flash in at least 16 KiB pages.
+            2023-10-04T23:17:13 INFO common.c: read from address 0000000000 size 65535
+            
+4. start server:
+    $ sudo st-util
+        st-util 1.7.0-314-g40fbdb4
+        2023-10-04T23:25:15 INFO common.c: STM32F4x5_F4x7: 192 KiB SRAM, 1024 KiB flash in at least 16 KiB pages.
+        2023-10-04T23:25:15 INFO gdb-server.c: Listening at *:4242...
+
+5. download gdb from https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/downloads
+   (version for host linux 64 bit, target arm): arm-gnu-toolchain-12.3.rel1-x86_64-arm-none-eabi
+       - unpack it in [workspace]/arm-gnu-toolchain-12.3.rel1-x86_64-arm-none-eabi
+       - from a different terminal, run:
+           $ sudo [workspace]/arm-gnu-toolchain-12.3.rel1-x86_64-arm-none-eabi/bin/arm-none-eabi-gdb [path]/file.elf
+           
+           - if error with libncurses.so.5:
+               $ sudo apt-get install libncurses5
+               - if installed ok but still error:
+                   - find where this is: 
+                   $ ldconfig -p | grep libncursesw.so.*
+                    libncursesw.so.6 (libc6,x86-64) => /lib/x86_64-linux-gnu/libncursesw.so.6
+                    libncursesw.so.6 (libc6) => /lib/i386-linux-gnu/libncursesw.so.6
+                - if a newer version exists, go to each folder and link:
+                $ sudo ln -s libncursesw.so.6 libncursesw.so.5 
+
+           - if error:
+               Could not find platform independent libraries <prefix>
+            Could not find platform dependent libraries <exec_prefix>
+            Consider setting $PYTHONHOME to <prefix>[:<exec_prefix>]
+            [...]
+            sys.path = [
+                '/usr/lib/python38.zip',
+                '/usr/lib/python3.8',
+                '/usr/lib/python3.8/lib-dynload',
+              ]
+            
+            - python 3.8 needs to be installed. If simply "$ sudo apt install python3.8" doesn't work:
+                $ sudo apt update
+                $ sudo apt install software-properties-common
+                $ sudo add-apt-repository ppa:deadsnakes/ppa
+                $ sudo apt install python3.8
+                
+        - if it works, a (gdb) prompt should appear:
+            GNU gdb (Arm GNU Toolchain 12.3.Rel1 (Build arm-12.35)) 13.2.90.20230627-git
+            Copyright (C) 2023 Free Software Foundation, Inc.
+            [...]
+            Reading symbols from [path]/file.elf...
+            (gdb)
+            
+6. connect and start debugging:
+    (gdb) target extended localhost:4242
+    (gdb) load     /* loads the elf file that was already open from prev step */
+    (gdb) step     /* should step through the instructions */
+    (gdb) b main   /* set breakpoint at in main function */
+    (gdb) c        /* continue until breakpoint is hit or forever */
+    (gdb) quit
+    
+7. make and run the project
+	- create a file: ~/.gdbinit containing the line:
+		set pagination off
+	- copy the project folder inside workspace folder
+	$ cd [workspace]/project/
+	$ make clean
+	$ make build /* create elf */
+	$ make gomain /* opens a new terminal window and runs st-util in it, in the current terminal runs gdb -> connect to target -> load elf -> set breakpoint in main -> go to it */
+	

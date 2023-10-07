@@ -1,0 +1,142 @@
+
+Discarded input sections
+
+ .group         0x00000000        0xc out/obj/main.o
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+FLASH            0x08000000         0x00100000         xr
+RAM              0x20000000         0x0001c000         xrw
+*default*        0x00000000         0xffffffff
+
+Linker script and memory map
+
+                0x2001c000                        _stack_top_addr = (ORIGIN (RAM) + LENGTH (RAM))
+
+.isr_vector     0x08000000       0x52
+                0x08000000                        . = ALIGN (0x4)
+ *(.isr_vector)
+ .isr_vector    0x08000000       0x52 out/obj/startup.o
+                0x08000000                g_vectors
+
+.text           0x08000054       0xd8
+                0x08000054                        . = ALIGN (0x4)
+                0x08000054                        _text_start_addr = .
+ *(.text)
+ .text          0x08000054       0x78 out/obj/main.o
+                0x08000054                main
+                0x080000c4                SysTick_Handler
+ .text          0x080000cc       0x14 out/obj/startup.o
+ *(.text*)
+ .text.Reset_Handler
+                0x080000e0       0x4c out/obj/startup.o
+                0x080000e0                Reset_Handler
+                0x0800012c                        . = ALIGN (0x4)
+                0x0800012c                        _text_end_addr = .
+
+.glue_7         0x0800012c        0x0
+ .glue_7        0x0800012c        0x0 linker stubs
+
+.glue_7t        0x0800012c        0x0
+ .glue_7t       0x0800012c        0x0 linker stubs
+
+.vfp11_veneer   0x0800012c        0x0
+ .vfp11_veneer  0x0800012c        0x0 linker stubs
+
+.v4_bx          0x0800012c        0x0
+ .v4_bx         0x0800012c        0x0 linker stubs
+
+.iplt           0x0800012c        0x0
+ .iplt          0x0800012c        0x0 out/obj/main.o
+
+.rodata         0x0800012c       0x10
+                0x0800012c                        . = ALIGN (0x4)
+                0x0800012c                        _rodata_start_addr = .
+ *(.rodata)
+ .rodata        0x0800012c       0x10 out/obj/main.o
+                0x0800012c                gci
+                0x08000130                gcu
+ *(.rodata*)
+                0x0800013c                        . = ALIGN (0x4)
+                0x0800013c                        _rodata_end_addr = .
+                0x0800013c                        _data_phys_addr = LOADADDR (.data)
+
+.rel.dyn        0x0800013c        0x0
+ .rel.iplt      0x0800013c        0x0 out/obj/main.o
+
+.data           0x20000000        0x8 load address 0x0800013c
+                0x20000000                        . = ALIGN (0x4)
+                0x20000000                        _data_start_addr = .
+ *(.data)
+ .data          0x20000000        0x8 out/obj/main.o
+                0x20000000                gvi
+ .data          0x20000008        0x0 out/obj/startup.o
+ *(.data*)
+                0x20000008                        . = ALIGN (0x4)
+                0x20000008                        _data_end_addr = .
+
+.igot.plt       0x20000008        0x0 load address 0x08000144
+ .igot.plt      0x20000008        0x0 out/obj/main.o
+
+.bss            0x20000008        0x8 load address 0x08000144
+                0x20000008                        . = ALIGN (0x4)
+                0x20000008                        _bss_start_addr = .
+ *(.bss)
+ .bss           0x20000008        0x8 out/obj/main.o
+                0x20000008                gvu
+ .bss           0x20000010        0x0 out/obj/startup.o
+ *(.bss*)
+ *(COMMON)
+                0x20000010                        . = ALIGN (0x4)
+                0x20000010                        _bss_end_addr = .
+LOAD out/obj/main.o
+LOAD out/obj/startup.o
+OUTPUT(out/out.elf elf32-littlearm)
+LOAD linker stubs
+
+.debug_info     0x00000000      0x123
+ .debug_info    0x00000000       0xf2 out/obj/main.o
+ .debug_info    0x000000f2       0x31 out/obj/startup.o
+
+.debug_abbrev   0x00000000       0xa8
+ .debug_abbrev  0x00000000       0x82 out/obj/main.o
+ .debug_abbrev  0x00000082       0x26 out/obj/startup.o
+
+.debug_aranges  0x00000000       0x40
+ .debug_aranges
+                0x00000000       0x20 out/obj/main.o
+ .debug_aranges
+                0x00000020       0x20 out/obj/startup.o
+
+.debug_macro    0x00000000      0xaa7
+ .debug_macro   0x00000000       0x11 out/obj/main.o
+ .debug_macro   0x00000011      0xa96 out/obj/main.o
+
+.debug_line     0x00000000       0xd3
+ .debug_line    0x00000000       0x6a out/obj/main.o
+ .debug_line    0x0000006a       0x69 out/obj/startup.o
+
+.debug_str      0x00000000     0x2d55
+ .debug_str     0x00000000     0x2d27 out/obj/main.o
+ .debug_str     0x00002d27       0x2e out/obj/startup.o
+                                 0x47 (size before relaxing)
+
+.comment        0x00000000       0x45
+ .comment       0x00000000       0x45 out/obj/main.o
+                                 0x46 (size before relaxing)
+
+.ARM.attributes
+                0x00000000       0x2c
+ .ARM.attributes
+                0x00000000       0x2e out/obj/main.o
+ .ARM.attributes
+                0x0000002e       0x21 out/obj/startup.o
+
+.debug_frame    0x00000000       0x44
+ .debug_frame   0x00000000       0x44 out/obj/main.o
+
+.debug_line_str
+                0x00000000       0x2b
+ .debug_line_str
+                0x00000000       0x2b out/obj/startup.o
