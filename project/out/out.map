@@ -1,7 +1,47 @@
 
 Discarded input sections
 
+ .group         0x00000000        0xc out/obj/gpio_driver.o
+ .group         0x00000000        0xc out/obj/gpio_driver.o
+ .group         0x00000000        0xc out/obj/gpio_driver.o
+ .group         0x00000000        0xc out/obj/gpio_driver.o
+ .group         0x00000000        0xc out/obj/gpio_driver.o
+ .group         0x00000000        0xc out/obj/gpio_driver.o
+ .group         0x00000000        0xc out/obj/gpio_driver.o
+ .group         0x00000000        0xc out/obj/gpio_driver.o
+ .group         0x00000000        0xc out/obj/gpio_driver.o
  .group         0x00000000        0xc out/obj/main.o
+ .group         0x00000000        0xc out/obj/main.o
+ .group         0x00000000        0xc out/obj/main.o
+ .group         0x00000000        0xc out/obj/main.o
+ .group         0x00000000        0xc out/obj/main.o
+ .group         0x00000000        0xc out/obj/main.o
+ .group         0x00000000        0xc out/obj/main.o
+ .group         0x00000000        0xc out/obj/main.o
+ .debug_macro   0x00000000      0xa96 out/obj/main.o
+ .debug_macro   0x00000000       0x22 out/obj/main.o
+ .debug_macro   0x00000000       0x8e out/obj/main.o
+ .debug_macro   0x00000000       0x51 out/obj/main.o
+ .debug_macro   0x00000000      0x103 out/obj/main.o
+ .debug_macro   0x00000000       0x6a out/obj/main.o
+ .debug_macro   0x00000000      0x1df out/obj/main.o
+ .debug_macro   0x00000000      0x3fd out/obj/main.o
+ .group         0x00000000        0xc out/obj/system.o
+ .group         0x00000000        0xc out/obj/system.o
+ .group         0x00000000        0xc out/obj/system.o
+ .group         0x00000000        0xc out/obj/system.o
+ .group         0x00000000        0xc out/obj/system.o
+ .group         0x00000000        0xc out/obj/system.o
+ .group         0x00000000        0xc out/obj/system.o
+ .group         0x00000000        0xc out/obj/system.o
+ .debug_macro   0x00000000      0xa96 out/obj/system.o
+ .debug_macro   0x00000000       0x22 out/obj/system.o
+ .debug_macro   0x00000000       0x8e out/obj/system.o
+ .debug_macro   0x00000000       0x51 out/obj/system.o
+ .debug_macro   0x00000000      0x103 out/obj/system.o
+ .debug_macro   0x00000000       0x6a out/obj/system.o
+ .debug_macro   0x00000000      0x1df out/obj/system.o
+ .debug_macro   0x00000000      0x3fd out/obj/system.o
 
 Memory Configuration
 
@@ -14,127 +54,192 @@ Linker script and memory map
 
                 0x2001c000                        _stack_top_addr = (ORIGIN (RAM) + LENGTH (RAM))
 
-.isr_vector     0x08000000       0x52
+.isr_vector     0x08000000       0xe6
                 0x08000000                        . = ALIGN (0x4)
  *(.isr_vector)
- .isr_vector    0x08000000       0x52 out/obj/startup.o
+ .isr_vector    0x08000000       0xe6 out/obj/startup.o
                 0x08000000                g_vectors
 
-.text           0x08000054       0xd8
-                0x08000054                        . = ALIGN (0x4)
-                0x08000054                        _text_start_addr = .
+.text           0x080000e8      0xd40
+                0x080000e8                        . = ALIGN (0x4)
+                0x080000e8                        _text_start_addr = .
  *(.text)
- .text          0x08000054       0x78 out/obj/main.o
-                0x08000054                main
-                0x080000c4                SysTick_Handler
- .text          0x080000cc       0x14 out/obj/startup.o
+ .text          0x080000e8      0x9d8 out/obj/gpio_driver.o
+                0x080000e8                GPIO_PortClockEnable
+                0x08000120                GPIO_PortClockDisable
+                0x08000158                GPIO_PortReset
+                0x080001a4                GPIO_PortRead
+                0x080001dc                GPIO_PortWrite
+                0x08000214                GPIO_PinAssign
+                0x08000268                GPIO_PinConfigDefault
+                0x08000360                GPIO_PinConfig
+                0x08000444                GPIO_PinApplyConfig
+                0x0800083c                GPIO_PinRead
+                0x080008a8                GPIO_PinWrite
+                0x08000930                GPIO_PinToggle
+                0x0800098c                GPIO_EnableInterrupt
+                0x08000a10                GPIO_DisableInterrupt
+                0x08000a78                GPIO_ClearPendingInterrupt
+ .text          0x08000ac0       0xe0 out/obj/main.o
+                0x08000ac0                Exti0_Handler
+                0x08000ae0                main
+ .text          0x08000ba0      0x228 out/obj/system.o
+                0x08000ba0                SysNvic_SetPriority
+                0x08000c44                SysTick_Handler
+                0x08000c60                SysClock_GetSystemMs
+                0x08000c74                SysClock_Set168Mhz
+                0x08000d80                Exti1_Handler
+                0x08000d8c                Exti2_Handler
+                0x08000d98                Exti3_Handler
+                0x08000da4                Exti4_Handler
+                0x08000db0                Exti9_5_Handler
+                0x08000dbc                Exti15_10_Handler
+ .text          0x08000dc8       0x14 out/obj/startup.o
  *(.text*)
  .text.Reset_Handler
-                0x080000e0       0x4c out/obj/startup.o
-                0x080000e0                Reset_Handler
-                0x0800012c                        . = ALIGN (0x4)
-                0x0800012c                        _text_end_addr = .
+                0x08000ddc       0x4c out/obj/startup.o
+                0x08000ddc                Reset_Handler
+                0x08000e28                        . = ALIGN (0x4)
+                0x08000e28                        _text_end_addr = .
 
-.glue_7         0x0800012c        0x0
- .glue_7        0x0800012c        0x0 linker stubs
+.glue_7         0x08000e28        0x0
+ .glue_7        0x08000e28        0x0 linker stubs
 
-.glue_7t        0x0800012c        0x0
- .glue_7t       0x0800012c        0x0 linker stubs
+.glue_7t        0x08000e28        0x0
+ .glue_7t       0x08000e28        0x0 linker stubs
 
-.vfp11_veneer   0x0800012c        0x0
- .vfp11_veneer  0x0800012c        0x0 linker stubs
+.vfp11_veneer   0x08000e28        0x0
+ .vfp11_veneer  0x08000e28        0x0 linker stubs
 
-.v4_bx          0x0800012c        0x0
- .v4_bx         0x0800012c        0x0 linker stubs
+.v4_bx          0x08000e28        0x0
+ .v4_bx         0x08000e28        0x0 linker stubs
 
-.iplt           0x0800012c        0x0
- .iplt          0x0800012c        0x0 out/obj/main.o
+.iplt           0x08000e28        0x0
+ .iplt          0x08000e28        0x0 out/obj/gpio_driver.o
 
-.rodata         0x0800012c       0x10
-                0x0800012c                        . = ALIGN (0x4)
-                0x0800012c                        _rodata_start_addr = .
+.rodata         0x08000e28       0x34
+                0x08000e28                        . = ALIGN (0x4)
+                0x08000e28                        _rodata_start_addr = .
  *(.rodata)
- .rodata        0x0800012c       0x10 out/obj/main.o
-                0x0800012c                gci
-                0x08000130                gcu
+ .rodata        0x08000e28       0x34 out/obj/gpio_driver.o
  *(.rodata*)
-                0x0800013c                        . = ALIGN (0x4)
-                0x0800013c                        _rodata_end_addr = .
-                0x0800013c                        _data_phys_addr = LOADADDR (.data)
+                0x08000e5c                        . = ALIGN (0x4)
+                0x08000e5c                        _rodata_end_addr = .
+                0x08000e5c                        _data_phys_addr = LOADADDR (.data)
 
-.rel.dyn        0x0800013c        0x0
- .rel.iplt      0x0800013c        0x0 out/obj/main.o
+.rel.dyn        0x08000e5c        0x0
+ .rel.iplt      0x08000e5c        0x0 out/obj/gpio_driver.o
 
-.data           0x20000000        0x8 load address 0x0800013c
+.data           0x20000000        0x0 load address 0x08000e5c
                 0x20000000                        . = ALIGN (0x4)
                 0x20000000                        _data_start_addr = .
  *(.data)
- .data          0x20000000        0x8 out/obj/main.o
-                0x20000000                gvi
- .data          0x20000008        0x0 out/obj/startup.o
+ .data          0x20000000        0x0 out/obj/gpio_driver.o
+ .data          0x20000000        0x0 out/obj/main.o
+ .data          0x20000000        0x0 out/obj/system.o
+ .data          0x20000000        0x0 out/obj/startup.o
  *(.data*)
-                0x20000008                        . = ALIGN (0x4)
-                0x20000008                        _data_end_addr = .
+                0x20000000                        . = ALIGN (0x4)
+                0x20000000                        _data_end_addr = .
 
-.igot.plt       0x20000008        0x0 load address 0x08000144
- .igot.plt      0x20000008        0x0 out/obj/main.o
+.igot.plt       0x20000000        0x0 load address 0x08000e5c
+ .igot.plt      0x20000000        0x0 out/obj/gpio_driver.o
 
-.bss            0x20000008        0x8 load address 0x08000144
-                0x20000008                        . = ALIGN (0x4)
-                0x20000008                        _bss_start_addr = .
+.bss            0x20000000       0x1c load address 0x08000e5c
+                0x20000000                        . = ALIGN (0x4)
+                0x20000000                        _bss_start_addr = .
  *(.bss)
- .bss           0x20000008        0x8 out/obj/main.o
-                0x20000008                gvu
- .bss           0x20000010        0x0 out/obj/startup.o
+ .bss           0x20000000        0x0 out/obj/gpio_driver.o
+ .bss           0x20000000       0x18 out/obj/main.o
+                0x20000000                GreenLedPin
+                0x20000008                RedLedPin
+                0x20000010                ButtonPin
+ .bss           0x20000018        0x4 out/obj/system.o
+ .bss           0x2000001c        0x0 out/obj/startup.o
  *(.bss*)
  *(COMMON)
-                0x20000010                        . = ALIGN (0x4)
-                0x20000010                        _bss_end_addr = .
+                0x2000001c                        . = ALIGN (0x4)
+                0x2000001c                        _bss_end_addr = .
+LOAD out/obj/gpio_driver.o
 LOAD out/obj/main.o
+LOAD out/obj/system.o
 LOAD out/obj/startup.o
 OUTPUT(out/out.elf elf32-littlearm)
 LOAD linker stubs
 
-.debug_info     0x00000000      0x123
- .debug_info    0x00000000       0xf2 out/obj/main.o
- .debug_info    0x000000f2       0x31 out/obj/startup.o
+.debug_info     0x00000000     0x1713
+ .debug_info    0x00000000      0xbb6 out/obj/gpio_driver.o
+ .debug_info    0x00000bb6      0x50c out/obj/main.o
+ .debug_info    0x000010c2      0x620 out/obj/system.o
+ .debug_info    0x000016e2       0x31 out/obj/startup.o
 
-.debug_abbrev   0x00000000       0xa8
- .debug_abbrev  0x00000000       0x82 out/obj/main.o
- .debug_abbrev  0x00000082       0x26 out/obj/startup.o
+.debug_abbrev   0x00000000      0x4bf
+ .debug_abbrev  0x00000000      0x1e0 out/obj/gpio_driver.o
+ .debug_abbrev  0x000001e0      0x133 out/obj/main.o
+ .debug_abbrev  0x00000313      0x186 out/obj/system.o
+ .debug_abbrev  0x00000499       0x26 out/obj/startup.o
 
-.debug_aranges  0x00000000       0x40
+.debug_aranges  0x00000000       0x80
  .debug_aranges
-                0x00000000       0x20 out/obj/main.o
+                0x00000000       0x20 out/obj/gpio_driver.o
  .debug_aranges
-                0x00000020       0x20 out/obj/startup.o
+                0x00000020       0x20 out/obj/main.o
+ .debug_aranges
+                0x00000040       0x20 out/obj/system.o
+ .debug_aranges
+                0x00000060       0x20 out/obj/startup.o
 
-.debug_macro    0x00000000      0xaa7
- .debug_macro   0x00000000       0x11 out/obj/main.o
- .debug_macro   0x00000011      0xa96 out/obj/main.o
+.debug_macro    0x00000000     0x14e3
+ .debug_macro   0x00000000       0x8f out/obj/gpio_driver.o
+ .debug_macro   0x0000008f      0xa96 out/obj/gpio_driver.o
+ .debug_macro   0x00000b25       0x22 out/obj/gpio_driver.o
+ .debug_macro   0x00000b47       0x22 out/obj/gpio_driver.o
+ .debug_macro   0x00000b69       0x8e out/obj/gpio_driver.o
+ .debug_macro   0x00000bf7       0x51 out/obj/gpio_driver.o
+ .debug_macro   0x00000c48      0x103 out/obj/gpio_driver.o
+ .debug_macro   0x00000d4b       0x6a out/obj/gpio_driver.o
+ .debug_macro   0x00000db5      0x1df out/obj/gpio_driver.o
+ .debug_macro   0x00000f94      0x3fd out/obj/gpio_driver.o
+ .debug_macro   0x00001391       0x86 out/obj/main.o
+ .debug_macro   0x00001417       0xcc out/obj/system.o
 
-.debug_line     0x00000000       0xd3
- .debug_line    0x00000000       0x6a out/obj/main.o
- .debug_line    0x0000006a       0x69 out/obj/startup.o
+.debug_line     0x00000000      0xe59
+ .debug_line    0x00000000      0x870 out/obj/gpio_driver.o
+ .debug_line    0x00000870      0x27e out/obj/main.o
+ .debug_line    0x00000aee      0x302 out/obj/system.o
+ .debug_line    0x00000df0       0x69 out/obj/startup.o
 
-.debug_str      0x00000000     0x2d55
- .debug_str     0x00000000     0x2d27 out/obj/main.o
- .debug_str     0x00002d27       0x2e out/obj/startup.o
+.debug_str      0x00000000     0x62a8
+ .debug_str     0x00000000     0x5c58 out/obj/gpio_driver.o
+                               0x5de2 (size before relaxing)
+ .debug_str     0x00005c58       0x74 out/obj/main.o
+                               0x5a83 (size before relaxing)
+ .debug_str     0x00005ccc      0x5ae out/obj/system.o
+                               0x5ac1 (size before relaxing)
+ .debug_str     0x0000627a       0x2e out/obj/startup.o
                                  0x47 (size before relaxing)
 
 .comment        0x00000000       0x45
- .comment       0x00000000       0x45 out/obj/main.o
+ .comment       0x00000000       0x45 out/obj/gpio_driver.o
                                  0x46 (size before relaxing)
+ .comment       0x00000045       0x46 out/obj/main.o
+ .comment       0x00000045       0x46 out/obj/system.o
 
 .ARM.attributes
                 0x00000000       0x2c
  .ARM.attributes
-                0x00000000       0x2e out/obj/main.o
+                0x00000000       0x2e out/obj/gpio_driver.o
  .ARM.attributes
-                0x0000002e       0x21 out/obj/startup.o
+                0x0000002e       0x2e out/obj/main.o
+ .ARM.attributes
+                0x0000005c       0x2e out/obj/system.o
+ .ARM.attributes
+                0x0000008a       0x21 out/obj/startup.o
 
-.debug_frame    0x00000000       0x44
- .debug_frame   0x00000000       0x44 out/obj/main.o
+.debug_frame    0x00000000      0x448
+ .debug_frame   0x00000000      0x264 out/obj/gpio_driver.o
+ .debug_frame   0x00000264       0x4c out/obj/main.o
+ .debug_frame   0x000002b0      0x198 out/obj/system.o
 
 .debug_line_str
                 0x00000000       0x2b
