@@ -102,5 +102,5 @@ Start debugging STM32F407 Discovery board with ST-LINK and GDB (on Ubuntu 22.04.
 	$ cd [workspace]/project/
 	$ make clean
 	$ make build /* create elf */
-	$ make gomain /* opens a new terminal window and runs st-util in it, in the current terminal runs gdb -> connect to target -> load elf -> set breakpoint in main -> go to it */
+	$ make run_to_main /* opens a new terminal window and runs st-util in it, in the current terminal runs gdb -> connect to target -> load elf -> set breakpoint in main -> go to it */
 	
