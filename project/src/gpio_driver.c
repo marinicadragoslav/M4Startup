@@ -5,7 +5,6 @@
  *  Author: marinicadragoslav@gmail.com
  */
 
-#include <stdbool.h>
 #include "gpio_driver.h"
 #include "system.h"
 
@@ -43,16 +42,16 @@ static const uint8_t IrqNumbers[] = {
 };
 
 /**
- * @brief   Enables the clock for the given GPIO port. This must be called before GPIO_PinInit.
+ * @brief   Enables the clock for the given GPIO port. This must be called before GPIO_PinApplyConfig.
  */
 GPIO_Status_t GPIO_PortClockEnable(GPIO_Port_t Port)
 {
-   if ((uint8_t)Port >= (uint8_t)GPIO_PORT_INVALID)
+   if ((uint32_t)Port >= (uint32_t)GPIO_PORT_INVALID)
    {
       return GPIO_STATUS_INVALID_PORT;
    }
 
-   RCC->AHB1ENR |= (1U << ((uint8_t)Port));
+   RCC->AHB1ENR |= (1U << Port);
 
    return GPIO_STATUS_OK;
 }
@@ -62,12 +61,12 @@ GPIO_Status_t GPIO_PortClockEnable(GPIO_Port_t Port)
  */
 GPIO_Status_t GPIO_PortClockDisable(GPIO_Port_t Port)
 {
-   if ((uint8_t)Port >= (uint8_t)GPIO_PORT_INVALID)
+   if ((uint32_t)Port >= (uint32_t)GPIO_PORT_INVALID)
    {
       return GPIO_STATUS_INVALID_PORT;
    }
 
-   RCC->AHB1ENR &= ~(1U << ((uint8_t)Port));
+   RCC->AHB1ENR &= ~(1U << Port);
 
    return GPIO_STATUS_OK;
 }
@@ -77,13 +76,13 @@ GPIO_Status_t GPIO_PortClockDisable(GPIO_Port_t Port)
  */
 GPIO_Status_t GPIO_PortReset(GPIO_Port_t Port)
 {
-   if ((uint8_t)Port >= (uint8_t)GPIO_PORT_INVALID)
+   if ((uint32_t)Port >= (uint32_t)GPIO_PORT_INVALID)
    {
       return GPIO_STATUS_INVALID_PORT;
    }
 
-   RCC->AHB1RSTR |=  (1U << ((uint8_t)Port));
-   RCC->AHB1RSTR &= ~(1U << ((uint8_t)Port));
+   RCC->AHB1RSTR |=  (1U << Port);
+   RCC->AHB1RSTR &= ~(1U << Port);
 
    return GPIO_STATUS_OK;
 }
@@ -93,12 +92,12 @@ GPIO_Status_t GPIO_PortReset(GPIO_Port_t Port)
  */
 GPIO_Status_t GPIO_PortRead(GPIO_Port_t Port, uint16_t* Val)
 {
-   if ((uint8_t)Port >= (uint8_t)GPIO_PORT_INVALID)
+   if ((uint32_t)Port >= (uint32_t)GPIO_PORT_INVALID)
    {
       return GPIO_STATUS_INVALID_PORT;
    }
 
-   *Val = (uint16_t)(PortInstances[(uint8_t)Port]->IDR); /* The lower 16 bits are relevant from the register */
+   *Val = (uint16_t)(PortInstances[Port]->IDR); /* The lower 16 bits are relevant from the register */
 
    return GPIO_STATUS_OK;
 }
@@ -108,12 +107,12 @@ GPIO_Status_t GPIO_PortRead(GPIO_Port_t Port, uint16_t* Val)
  */
 GPIO_Status_t GPIO_PortWrite(GPIO_Port_t Port, uint16_t Val)
 {
-   if ((uint8_t)Port >= (uint8_t)GPIO_PORT_INVALID)
+   if ((uint32_t)Port >= (uint32_t)GPIO_PORT_INVALID)
    {
       return GPIO_STATUS_INVALID_PORT;
    }
 
-   PortInstances[(uint8_t)Port]->ODR = (uint32_t)Val;
+   PortInstances[Port]->ODR = (uint32_t)Val;
 
    return GPIO_STATUS_OK;
 }
@@ -129,19 +128,18 @@ GPIO_Status_t GPIO_PinAssign(GPIO_Pin_t* Pin, GPIO_Port_t Port, GPIO_PinNum_t Pi
       return GPIO_STATUS_INVALID_PIN;
    }
 
-   if ((uint8_t)Port >= (uint8_t)GPIO_PORT_INVALID)
+   if ((uint32_t)Port >= (uint32_t)GPIO_PORT_INVALID)
    {
       return GPIO_STATUS_INVALID_PORT;
    }
 
-   if ((uint8_t)PinNum >= (uint8_t)GPIO_PIN_NUM_INVALID)
+   if ((uint32_t)PinNum >= (uint32_t)GPIO_PIN_NUM_INVALID)
    {
       return GPIO_STATUS_INVALID_PIN_NUM;
    }
 
    Pin->Port = Port;
    Pin->PinNum = PinNum;
-   Pin->ConfigFlags |= (GPIO_FLAG_PORT | GPIO_FLAG_PIN_NUM);
 
    return GPIO_STATUS_OK;
 }
@@ -158,12 +156,12 @@ GPIO_Status_t GPIO_PinConfigDefault(GPIO_Pin_t* Pin)
       return GPIO_STATUS_INVALID_PIN;
    }
 
-   if ((uint8_t)(Pin->Port) >= (uint8_t)GPIO_PORT_INVALID)
+   if ((uint32_t)(Pin->Port) >= (uint32_t)GPIO_PORT_INVALID)
    {
       return GPIO_STATUS_INVALID_PORT;
    }
 
-   if ((uint8_t)(Pin->PinNum) >= (uint8_t)GPIO_PIN_NUM_INVALID)
+   if ((uint32_t)(Pin->PinNum) >= (uint32_t)GPIO_PIN_NUM_INVALID)
    {
       return GPIO_STATUS_INVALID_PIN_NUM;
    }
@@ -172,8 +170,8 @@ GPIO_Status_t GPIO_PinConfigDefault(GPIO_Pin_t* Pin)
    Pin->Mode = GPIO_MODE_IN;
    Pin->Speed = GPIO_SPEED_LOW;
    Pin->Pull = GPIO_PULL_NONE;
-   Pin->Output = GPIO_OUT_PP;
-   Pin->AltFunc = GPIO_AF_0;
+   Pin->OutType = GPIO_OUTTYPE_PUSHPULL;
+   Pin->AltFunc = GPIO_ALTFUNC_0;
 
    /* Set specific default characteristics, depending on the port and pin number */
    if(Pin->Port == GPIO_PORT_A)
@@ -181,7 +179,7 @@ GPIO_Status_t GPIO_PinConfigDefault(GPIO_Pin_t* Pin)
       /* default value for GPIOA MODER register is 0xA8000000 => pins 13, 14, 15 are in Alternate Function mode */
       if(Pin->PinNum == GPIO_PIN_NUM_13 || Pin->PinNum == GPIO_PIN_NUM_14 || Pin->PinNum == GPIO_PIN_NUM_15)
       {
-         Pin->Mode = GPIO_MODE_ALTFN;
+         Pin->Mode = GPIO_MODE_ALTFUNC;
       }
 
       /* default value for GPIOA OSPEEDR register is 0x0C000000 => pin 13 has VHIGH speed by default */
@@ -205,7 +203,7 @@ GPIO_Status_t GPIO_PinConfigDefault(GPIO_Pin_t* Pin)
       /* default value for GPIOB MODER register is 0x00000280 => pins 3 and 4 are in Alternate Function mode */
       if(Pin->PinNum == GPIO_PIN_NUM_3 || Pin->PinNum == GPIO_PIN_NUM_4)
       {
-         Pin->Mode = GPIO_MODE_ALTFN;
+         Pin->Mode = GPIO_MODE_ALTFUNC;
       }
 
       /* default value for GPIOB OSPEEDR register is 0x000000C0 => pin 3 has VHIGH speed by default */
@@ -221,8 +219,6 @@ GPIO_Status_t GPIO_PinConfigDefault(GPIO_Pin_t* Pin)
       }
    }
 
-   Pin->ConfigFlags |= (GPIO_FLAG_MODE | GPIO_FLAG_SPEED | GPIO_FLAG_PULL | GPIO_FLAG_OUTPUT | GPIO_FLAG_ALTFUNC);
-
    return GPIO_STATUS_OK;
 }
 
@@ -231,67 +227,43 @@ GPIO_Status_t GPIO_PinConfigDefault(GPIO_Pin_t* Pin)
  * @brief   Configures a Pin with the given characteristics. The ones with a "NOT_APPLICABLE" value will be skipped.
  */
 GPIO_Status_t GPIO_PinConfig(GPIO_Pin_t* Pin, GPIO_Mode_t Mode, GPIO_Speed_t Speed, GPIO_Pull_t Pull, 
-      GPIO_Output_t Output, GPIO_AltFunc_t AltFunc)
+      GPIO_OutType_t OutType, GPIO_AltFunc_t AltFunc)
 {
    if (!Pin)
    {
       return GPIO_STATUS_INVALID_PIN;
    }
 
-   /* Set mode or die */
-   if ((uint8_t)Mode >= (uint8_t)GPIO_MODE_INVALID)
+   if ((uint32_t)Mode >= (uint32_t)GPIO_MODE_INVALID)
    {
       return GPIO_STATUS_INVALID_MODE;
    }
-   else if (Mode != GPIO_MODE_NOT_APPLICABLE)
-   {
-      Pin->Mode = Mode;
-      Pin->ConfigFlags |= GPIO_FLAG_MODE;
-   }
 
-   /* Set speed or die */
-   if ((uint8_t)Speed >= (uint8_t)GPIO_SPEED_INVALID)
+   if ((uint32_t)Speed >= (uint32_t)GPIO_SPEED_INVALID)
    {
       return GPIO_STATUS_INVALID_SPEED;
    }
-   else if (Speed != GPIO_SPEED_NOT_APPLICABLE)
-   {
-      Pin->Speed = Speed;
-      Pin->ConfigFlags |= GPIO_FLAG_SPEED;
-   }
 
-   /* Set Pull or die */
-   if ((uint8_t)Pull >= (uint8_t)GPIO_PULL_INVALID)
+   if ((uint32_t)Pull >= (uint32_t)GPIO_PULL_INVALID)
    {
       return GPIO_STATUS_INVALID_PULL;
    }
-   else if(Pull != GPIO_PULL_NOT_APPLICABLE)
-   {
-      Pin->Pull = Pull;
-      Pin->ConfigFlags |= GPIO_FLAG_PULL;
-   }
 
-   /* Set output or die */
-   if ((uint8_t)Output >= (uint8_t)GPIO_OUT_INVALID)
+   if ((uint32_t)OutType >= (uint32_t)GPIO_OUTTYPE_INVALID)
    {
       return GPIO_STATUS_INVALID_OUTPUT;
    }
-   else if (Output != GPIO_OUT_NOT_APPLICABLE)
-   {
-      Pin->Output = Output;
-      Pin->ConfigFlags |= GPIO_FLAG_OUTPUT;
-   }
 
-   /* Set alternate function or die */
-   if ((uint8_t)AltFunc >= (uint8_t)GPIO_AF_INVALID)
+   if ((uint32_t)AltFunc >= (uint32_t)GPIO_ALTFUNC_INVALID)
    {
       return GPIO_STATUS_INVALID_ALTFUNC;
    }
-   else if (AltFunc != GPIO_AF_NOT_APPLICABLE)
-   {
-      Pin->AltFunc = AltFunc;
-      Pin->ConfigFlags |= GPIO_FLAG_ALTFUNC;
-   }
+
+   Pin->Mode = Mode;
+   Pin->Speed = Speed;
+   Pin->Pull = Pull;
+   Pin->OutType = OutType;
+   Pin->AltFunc = AltFunc;
 
    return GPIO_STATUS_OK;
 }
@@ -307,94 +279,50 @@ GPIO_Status_t GPIO_PinApplyConfig(GPIO_Pin_t* Pin)
       return GPIO_STATUS_INVALID_PIN;
    }
 
-   if ((uint8_t)(Pin->Port) >= (uint8_t)GPIO_PORT_INVALID)
+   if ((uint32_t)(Pin->Port) >= (uint32_t)GPIO_PORT_INVALID)
    {
       return GPIO_STATUS_INVALID_PORT;
    }
 
-   if ((Pin->ConfigFlags & GPIO_FLAG_PORT) == 0)
-   {
-      return GPIO_STATUS_UNASSIGNED_PORT;
-   }
-
-   if ((uint8_t)(Pin->PinNum) >= (uint8_t)GPIO_PIN_NUM_INVALID)
+   if ((uint32_t)(Pin->PinNum) >= (uint32_t)GPIO_PIN_NUM_INVALID)
    {
       return GPIO_STATUS_INVALID_PIN_NUM;
    }
 
-   if ((Pin->ConfigFlags & GPIO_FLAG_PIN_NUM) == 0)
-   {
-      return GPIO_STATUS_UNASSIGNED_PIN_NUM;
-   }
-
-   if ((uint8_t)(Pin->Mode) >= (uint8_t)GPIO_MODE_NOT_APPLICABLE)
+   if ((uint32_t)(Pin->Mode) >= (uint32_t)GPIO_MODE_INVALID)
    {
       return GPIO_STATUS_INVALID_MODE;
    }
 
-   if ((uint8_t)(Pin->Speed) >= (uint8_t)GPIO_SPEED_NOT_APPLICABLE)
+   if ((uint32_t)(Pin->Speed) >= (uint32_t)GPIO_SPEED_INVALID)
    {
       return GPIO_STATUS_INVALID_SPEED;
    }
 
-   if ((uint8_t)(Pin->Pull) >= (uint8_t)GPIO_PULL_NOT_APPLICABLE)
+   if ((uint32_t)(Pin->Pull) >= (uint32_t)GPIO_PULL_INVALID)
    {
       return GPIO_STATUS_INVALID_PULL;
    }
 
-   if ((uint8_t)(Pin->Output) >= (uint8_t)GPIO_OUT_NOT_APPLICABLE)
+   if ((uint32_t)(Pin->OutType) >= (uint32_t)GPIO_OUTTYPE_INVALID)
    {
       return GPIO_STATUS_INVALID_OUTPUT;
    }
 
-   if ((uint8_t)(Pin->AltFunc) >= (uint8_t)GPIO_AF_NOT_APPLICABLE)
+   if ((uint32_t)(Pin->AltFunc) >= (uint32_t)GPIO_ALTFUNC_INVALID)
    {
       return GPIO_STATUS_INVALID_ALTFUNC;
    }
 
-   if ((Pin->ConfigFlags & GPIO_FLAG_ALL) != GPIO_FLAG_ALL)
-   {
-      GPIO_Pin_t DefaultPin;
-      DefaultPin.Port = Pin->Port;
-      DefaultPin.PinNum = Pin->PinNum;
-      GPIO_PinConfigDefault(&DefaultPin);
-      if ((Pin->ConfigFlags & GPIO_FLAG_MODE) == 0)
-      {
-         Pin->Mode = DefaultPin.Mode;
-      }
-
-      if ((Pin->ConfigFlags & GPIO_FLAG_SPEED) == 0)
-      {
-         Pin->Speed = DefaultPin.Speed;
-      }
-
-      if ((Pin->ConfigFlags & GPIO_FLAG_PULL) == 0)
-      {
-         Pin->Pull = DefaultPin.Pull;
-      }
-
-      if ((Pin->ConfigFlags & GPIO_FLAG_OUTPUT) == 0)
-      {
-         Pin->Output = DefaultPin.Output;
-      }
-
-      if ((Pin->ConfigFlags & GPIO_FLAG_ALTFUNC) == 0)
-      {
-         Pin->AltFunc = DefaultPin.AltFunc;
-      }
-   }
-
    GPIO_PortRegDef_t* PortInst = PortInstances[Pin->Port];
-   uint8_t Shift;
 
    if (Pin->Mode == GPIO_MODE_IN || Pin->Mode == GPIO_MODE_OUT || 
-         Pin->Mode == GPIO_MODE_ALTFN || Pin->Mode == GPIO_MODE_ANALOG)
+         Pin->Mode == GPIO_MODE_ALTFUNC || Pin->Mode == GPIO_MODE_ANALOG)
    {
       /* non-interrupt pin mode */
-      Shift = (2 * Pin->PinNum);
-      PortInst->MODER = (PortInst->MODER & (~(0x03U << Shift))) | (Pin->Mode << Shift);
+      PortInst->MODER = (PortInst->MODER & (~(0x03U << (2 * Pin->PinNum)))) | (Pin->Mode << (2 * Pin->PinNum));
    }
-   else
+   else if (Pin->Mode != GPIO_MODE_SKIP)
    {
       /* interrupt pin mode */
       if (Pin->Mode == GPIO_MODE_IT_FT)
@@ -420,6 +348,7 @@ GPIO_Status_t GPIO_PinApplyConfig(GPIO_Pin_t* Pin)
       SYSCFG_PCLK_EN();
 
       /* configure GPIO port selection in SYSCFG_EXTICRx */
+      uint8_t Shift;
       if(Pin->PinNum <= 3U)
       {
          Shift = (4 * Pin->PinNum);
@@ -448,22 +377,29 @@ GPIO_Status_t GPIO_PinApplyConfig(GPIO_Pin_t* Pin)
    /* configure pin output speed and output type if pin is output */
    if(Pin->Mode == GPIO_MODE_OUT)
    {
-      Shift = (2 * Pin->PinNum);
-      PortInst->OSPEEDR = (PortInst->OSPEEDR & (~(0x03U << Shift))) | (Pin->Speed << Shift);
-      PortInst->OTYPER = (PortInst->OTYPER & (~(0x01U << Pin->PinNum))) | (Pin->Output << Pin->PinNum);
+      if (Pin->Speed != GPIO_SPEED_SKIP)
+      {
+         PortInst->OSPEEDR = (PortInst->OSPEEDR & (~(0x03U << (2 * Pin->PinNum)))) | (Pin->Speed << (2 * Pin->PinNum));
+      }
+
+      if (Pin->OutType != GPIO_OUTTYPE_SKIP)
+      {
+         PortInst->OTYPER = (PortInst->OTYPER & (~(0x01U << Pin->PinNum))) | (Pin->OutType << Pin->PinNum);
+      }
+   }
+   
+   /* configure pull resistor */
+   if (Pin->Pull != GPIO_PULL_SKIP)
+   {
+      PortInst->PUPDR = (PortInst->PUPDR & (~(0x03U << (2 * Pin->PinNum)))) | (Pin->Pull << (2 * Pin->PinNum));
    }
 
-   /* configure pull resistor */
-   Shift = (2 * Pin->PinNum);
-   PortInst->PUPDR = (PortInst->PUPDR & (~(0x03U << Shift))) | (Pin->Pull << Shift);
-
    /* configure alternate function */
-   if(Pin->Mode == GPIO_MODE_ALTFN)
+   if((Pin->Mode == GPIO_MODE_ALTFUNC) && (Pin->AltFunc != GPIO_ALTFUNC_SKIP))
    {
       uint8_t Reg = Pin->PinNum / 8; /* 0 or 1, meaning index of AFR (AFR[0] = AFRL reg, AFR[1] = AFRH reg) */
       uint8_t Pos = Pin->PinNum % 8; /* 0..7, means the position of the 4-bit field that has to be modified */
-      Shift = (4 * Pos);
-      PortInst->AFR[Reg] = (PortInst->AFR[Reg] & (~(0x0FU << (4 * Pos)))) | (Pin->AltFunc << Shift);
+      PortInst->AFR[Reg] = (PortInst->AFR[Reg] & (~(0x0FU << (4 * Pos)))) | (Pin->AltFunc << (4 * Pos));
    }
 
    return GPIO_STATUS_OK;
@@ -479,12 +415,12 @@ GPIO_Status_t GPIO_PinRead(GPIO_Pin_t* Pin, GPIO_PinState_t* State)
       return GPIO_STATUS_INVALID_PIN;
    }
 
-   if ((uint8_t)(Pin->Port) >= (uint8_t)GPIO_PORT_INVALID)
+   if ((uint32_t)(Pin->Port) >= (uint32_t)GPIO_PORT_INVALID)
    {
       return GPIO_STATUS_INVALID_PORT;
    }
 
-   if ((uint8_t)(Pin->PinNum) >= (uint8_t)GPIO_PIN_NUM_INVALID)
+   if ((uint32_t)(Pin->PinNum) >= (uint32_t)GPIO_PIN_NUM_INVALID)
    {
       return GPIO_STATUS_INVALID_PIN_NUM;
    }
@@ -507,17 +443,17 @@ GPIO_Status_t GPIO_PinWrite(GPIO_Pin_t* Pin, GPIO_PinState_t State)
       return GPIO_STATUS_INVALID_PIN;
    }
 
-   if ((uint8_t)(Pin->Port) >= (uint8_t)GPIO_PORT_INVALID)
+   if ((uint32_t)(Pin->Port) >= (uint32_t)GPIO_PORT_INVALID)
    {
       return GPIO_STATUS_INVALID_PORT;
    }
 
-   if ((uint8_t)(Pin->PinNum) >= (uint8_t)GPIO_PIN_NUM_INVALID)
+   if ((uint32_t)(Pin->PinNum) >= (uint32_t)GPIO_PIN_NUM_INVALID)
    {
       return GPIO_STATUS_INVALID_PIN_NUM;
    }
 
-   if ((uint8_t)State >= (uint8_t)GPIO_PIN_STATE_INVALID)
+   if ((uint32_t)State >= (uint32_t)GPIO_PIN_STATE_INVALID)
    {
       return GPIO_STATUS_INVALID_PIN_STATE;
    }
@@ -547,12 +483,12 @@ GPIO_Status_t GPIO_PinToggle(GPIO_Pin_t* Pin)
       return GPIO_STATUS_INVALID_PIN;
    }
 
-   if ((uint8_t)(Pin->Port) >= (uint8_t)GPIO_PORT_INVALID)
+   if ((uint32_t)(Pin->Port) >= (uint32_t)GPIO_PORT_INVALID)
    {
       return GPIO_STATUS_INVALID_PORT;
    }
 
-   if ((uint8_t)(Pin->PinNum) >= (uint8_t)GPIO_PIN_NUM_INVALID)
+   if ((uint32_t)(Pin->PinNum) >= (uint32_t)GPIO_PIN_NUM_INVALID)
    {
       return GPIO_STATUS_INVALID_PIN_NUM;
    }
@@ -571,7 +507,7 @@ GPIO_Status_t GPIO_PinToggle(GPIO_Pin_t* Pin)
  */
 GPIO_Status_t GPIO_EnableInterrupt(GPIO_PinNum_t PinNum, uint8_t Priority)
 {
-   if ((uint8_t)(PinNum) >= (uint8_t)GPIO_PIN_NUM_INVALID)
+   if ((uint32_t)PinNum >= (uint32_t)GPIO_PIN_NUM_INVALID)
    {
       return GPIO_STATUS_INVALID_PIN_NUM;
    }
@@ -581,7 +517,7 @@ GPIO_Status_t GPIO_EnableInterrupt(GPIO_PinNum_t PinNum, uint8_t Priority)
       return GPIO_STATUS_INVALID_PRIO;
    }
 
-   uint8_t IrqNum = IrqNumbers[(uint8_t)PinNum];
+   uint8_t IrqNum = IrqNumbers[PinNum];
    
    if(IrqNum < 32U)
    {
@@ -604,12 +540,12 @@ GPIO_Status_t GPIO_EnableInterrupt(GPIO_PinNum_t PinNum, uint8_t Priority)
  */
 GPIO_Status_t GPIO_DisableInterrupt(GPIO_PinNum_t PinNum)
 {
-   if ((uint8_t)(PinNum) >= (uint8_t)GPIO_PIN_NUM_INVALID)
+   if ((uint32_t)PinNum >= (uint32_t)GPIO_PIN_NUM_INVALID)
    {
       return GPIO_STATUS_INVALID_PIN_NUM;
    }
 
-   uint8_t IrqNum = IrqNumbers[(uint8_t)PinNum];
+   uint8_t IrqNum = IrqNumbers[PinNum];
    
    if(IrqNum < 32U)
    {
@@ -630,14 +566,14 @@ GPIO_Status_t GPIO_DisableInterrupt(GPIO_PinNum_t PinNum)
  */
 GPIO_Status_t GPIO_ClearPendingInterrupt(GPIO_PinNum_t PinNum)
 {
-   if ((uint8_t)(PinNum) >= (uint8_t)GPIO_PIN_NUM_INVALID)
+   if ((uint32_t)PinNum >= (uint32_t)GPIO_PIN_NUM_INVALID)
    {
       return GPIO_STATUS_INVALID_PIN_NUM;
    }
 
-   if(EXTI->PR & (1U << ((uint8_t)PinNum))) /* if interrupt is pending */
+   if(EXTI->PR & (1U << PinNum)) /* if interrupt is pending */
    {
-      EXTI->PR |= (1U << ((uint8_t)PinNum)); /* clear pending bit by writing 1 to it */
+      EXTI->PR |= (1U << PinNum); /* clear pending bit by writing 1 to it */
    }
 
    return GPIO_STATUS_OK;

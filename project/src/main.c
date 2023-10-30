@@ -27,20 +27,17 @@ int main(void)
 
     /* config Green Led Pin, PD12 */
     GPIO_PinAssign(&GreenLedPin, GPIO_PORT_D, GPIO_PIN_NUM_12);
-    GPIO_PinConfig(&GreenLedPin, GPIO_MODE_OUT, GPIO_SPEED_LOW, GPIO_PULL_NONE, 
-                                GPIO_OUT_PP, GPIO_AF_NOT_APPLICABLE);
+    GPIO_PinConfig(&GreenLedPin, GPIO_MODE_OUT, GPIO_SPEED_LOW, GPIO_PULL_NONE, GPIO_OUTTYPE_PUSHPULL, GPIO_ALTFUNC_SKIP);
     GPIO_PinApplyConfig(&GreenLedPin);
 
     /* config Red Led Pin, PD14 */
     GPIO_PinAssign(&RedLedPin, GPIO_PORT_D, GPIO_PIN_NUM_14);
-    GPIO_PinConfig(&RedLedPin, GPIO_MODE_OUT, GPIO_SPEED_LOW, GPIO_PULL_NONE, 
-                                GPIO_OUT_PP, GPIO_AF_NOT_APPLICABLE);
+    GPIO_PinConfig(&RedLedPin, GPIO_MODE_OUT, GPIO_SPEED_LOW, GPIO_PULL_NONE, GPIO_OUTTYPE_PUSHPULL, GPIO_ALTFUNC_SKIP);
     GPIO_PinApplyConfig(&RedLedPin);
 
     /* config Button Pin, PA0 */
     GPIO_PinAssign(&ButtonPin, GPIO_PORT_A, GPIO_PIN_NUM_0);
-    GPIO_PinConfig(&ButtonPin, GPIO_MODE_IT_RT, GPIO_SPEED_NOT_APPLICABLE, GPIO_PULL_NONE, 
-                                GPIO_OUT_NOT_APPLICABLE, GPIO_AF_NOT_APPLICABLE);
+    GPIO_PinConfig(&ButtonPin, GPIO_MODE_IT_RT, GPIO_SPEED_SKIP, GPIO_PULL_NONE, GPIO_OUTTYPE_SKIP, GPIO_ALTFUNC_SKIP);
     GPIO_PinApplyConfig(&ButtonPin);
     GPIO_EnableInterrupt(ButtonPin.PinNum, NVIC_IRQ_PRIO11);
 
