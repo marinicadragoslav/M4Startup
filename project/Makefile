@@ -1,6 +1,7 @@
-# Call this with: [make clean], [make build] (same as [make]), [make gomain]
+# Call this with: [make clean], [make build], [make run], [make run_to_main]
 
 # Notes:
+# ... this only works for files directly inside the SRC_DIR, INC_DIR, etc, it doesn't find files in subdirectories
 # ... $< stands for: first from dependencies
 # ... $^ stands for: all from dependency list
 # ... $@ stands for: target element
@@ -8,72 +9,71 @@
 SRC_DIR := ./src/
 INC_DIR := ./inc/
 STARTUP_DIR := ./startup/
-LINK_DIR := ./link/
-OUT_DIR := ./out/
 OBJ_DIR := ./out/obj/
 
-LINKER := linker_script.ld
-ELF := out.elf
-MAP := out.map
-STARTUP := startup.s
+LINKER_FILE := ./link/linker_script.ld
+ELF_FILE := ./out/out.elf
+MAP_FILE := ./out/out.map
 
-CFLAGS := -c -O0 -g3 -mcpu=cortex-m4 -mthumb
+GCC := ../arm-gnu-toolchain-12.3.rel1-x86_64-arm-none-eabi/bin/arm-none-eabi-gcc
+LD := ../arm-gnu-toolchain-12.3.rel1-x86_64-arm-none-eabi/bin/arm-none-eabi-ld 
+
+CFLAGS := -O0 -g3 -mcpu=cortex-m4 -mthumb -Wall -Wextra
 LFLAGS := --print-memory-usage
 
-# Get files with path
-LINKER_FILE := $(addprefix $(LINK_DIR),$(LINKER))
-ELF_FILE := $(addprefix $(OUT_DIR),$(ELF))
-MAP_FILE := $(addprefix $(OUT_DIR),$(MAP))
-STARTUP_FILE := $(addprefix $(STARTUP_DIR),$(STARTUP))
+# Get lists of files for each type
+C_FILES := $(wildcard $(addprefix $(SRC_DIR),*.c))
+H_FILES := $(wildcard $(addprefix $(INC_DIR),*.h))
+S_FILES := $(wildcard $(addprefix $(STARTUP_DIR),*.s))
 
-# Get source files list
-SOURCES := $(wildcard $(addprefix $(SRC_DIR),*.c))
+# Replace .c with .o and SRC_DIR with OBJ_DIR to get a list of object files:
+O_FILES_FROM_C := $(patsubst %.c,%.o,$(patsubst $(SRC_DIR)%,$(OBJ_DIR)%,$(C_FILES)))
 
-# Get headers list
-HEADERS := $(wildcard $(addprefix $(INC_DIR),*.h))
+# Replace .s with .o and STARTUP_DIR with OBJ_DIR to get a list of object files:
+O_FILES_FROM_S := $(patsubst %.s,%.o,$(patsubst $(STARTUP_DIR)%,$(OBJ_DIR)%,$(S_FILES)))
 
-# Get startup files list
-STARTUPS := $(wildcard $(addprefix $(STARTUP_DIR),*.s))
+# Concatenate all object files
+O_FILES := $(O_FILES_FROM_C) $(O_FILES_FROM_S)
 
-# Replace .c with .o in source files list, then replace source dir with obj dir to obtain object files list
-TEMP := $(subst .c,.o,$(SOURCES))
-OBJECTS := $(subst $(SRC_DIR),$(OBJ_DIR),$(TEMP))
+# Link all .o files to an executable
+$(ELF_FILE): $(O_FILES)
+	@echo "Building elf"
+	$(LD) -T $(LINKER_FILE) -Map=$(MAP_FILE) $(LFLAGS) $^ -o $@
 
-# Replace .s with .o in startup files list, then replace startup dir with obj dir to obtain startup-object files list
-TEMP_S := $(subst .s,.o,$(STARTUPS))
-OBJECTS_S := $(subst $(STARTUP_DIR),$(OBJ_DIR),$(TEMP_S))
+# Compile each .c file to a corresponding .o file
+$(O_FILES_FROM_C): $(OBJ_DIR)%.o : $(SRC_DIR)%.c $(H_FILES)
+	@echo "Compiling"
+	$(GCC) -c -o $@ $(CFLAGS) $< -I$(INC_DIR)
 
-# Link all .o files from OBJECTS list to an executable program
-$(ELF_FILE): $(OBJECTS) $(OBJECTS_S)
-	@echo "Build elf"
-	../arm-gnu-toolchain-12.3.rel1-x86_64-arm-none-eabi/bin/arm-none-eabi-ld -T $(LINKER_FILE) -Map=$(MAP_FILE) $(LFLAGS) $^ -o $@
-
-# Compile each .c file from SRC_DIR to a corresponding .o file inside OBJ_DIR
-$(OBJ_DIR)%.o: $(SRC_DIR)%.c $(HEADERS)
-	@echo "Compile sources"
-	../arm-gnu-toolchain-12.3.rel1-x86_64-arm-none-eabi/bin/arm-none-eabi-gcc -o $@ $(CFLAGS) $< -I$(INC_DIR)
+# Compile each .s file to a corresponding .o file
+$(O_FILES_FROM_S): $(OBJ_DIR)%.o : $(STARTUP_DIR)%.s
+	@echo "Compiling"
+	$(GCC) -c -o $@ $(CFLAGS) $<
 	
-# Compile each .s file from STARTUP_DIR to a corresponding .o file inside OBJ_DIR
-$(OBJ_DIR)%.o: $(STARTUP_DIR)%.s
-	@echo "Compile startup files"
-	../arm-gnu-toolchain-12.3.rel1-x86_64-arm-none-eabi/bin/arm-none-eabi-gcc -o $@ $(CFLAGS) $<
-
 # Don't make target files from keywords clean, build
-.PHONY: clean run build
+.PHONY: clean build run run_to_main
 
 # Clean up: call with make clean
 clean:
-	@echo "Clean"
+	@echo "Cleaning"
 	rm -f $(ELF_FILE)
 	rm -f $(MAP_FILE)
 	rm -f $(OBJ_DIR)*.o
-	
-# Open st-util in another terminal, open gdb in the current terminal and load elf on the target, set breakpoint in main and go
-gomain:
-	gnome-terminal -- sh -c "bash -c \"st-util; exec bash\""
-	sleep 3s
-	../arm-gnu-toolchain-12.3.rel1-x86_64-arm-none-eabi/bin/arm-none-eabi-gdb $(ELF_FILE) -quiet -ex 'target extended localhost:4242' -ex 'load' -ex 'b main' -ex 'continue'
 
 # Build executable: call with "make build" or just plain "make"
 build: $(ELF_FILE)
+
+# Open st-util in another terminal, open gdb in the current terminal and load elf on the target, then go
+run:
+	gnome-terminal -- sh -c "bash -c \"st-util; exec bash\"" 
+	sleep 3s
+	../arm-gnu-toolchain-12.3.rel1-x86_64-arm-none-eabi/bin/arm-none-eabi-gdb $(ELF_FILE) -quiet -ex 'target extended localhost:4242' -ex 'load' -ex 'continue'
+
+# Open st-util in another terminal, open gdb in the current terminal and load elf on the target, set breakpoint in main and go
+run_to_main:
+	gnome-terminal -- sh -c "bash -c \"st-util; exec bash\"" 
+	sleep 3s
+	../arm-gnu-toolchain-12.3.rel1-x86_64-arm-none-eabi/bin/arm-none-eabi-gdb $(ELF_FILE) -quiet -ex 'target extended localhost:4242' -ex 'load' -ex 'b main' -ex 'continue'
+
+# Specify what rule is invoked when calling plain "make" (in this case the same as "make build")
 .DEFAULT_GOAL := $(ELF_FILE)
